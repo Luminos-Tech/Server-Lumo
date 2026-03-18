@@ -1,3 +1,4 @@
+from logging.handlers import TimedRotatingFileHandler
 import os
 from pathlib import Path
 import requests
@@ -8,11 +9,21 @@ from google.genai import types
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from uvicorn import logging
+
 load_dotenv()
 
 # =========================
 # CONFIG
 # =========================
+# --- CẤU HÌNH LOGGING THEO NGÀY ---
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler = TimedRotatingFileHandler("system.log", when="midnight", interval=1, backupCount=30, encoding='utf-8')
+handler.setFormatter(formatter)
+logger = logging.getLogger("HeartApp")
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
 DOCS_DIR = Path("/docs")
 # MODEL_NAME = "gemini-2.5-flash"
 
@@ -113,6 +124,8 @@ async def version1(
                 ]
             )
         )
+        logger.info(f"Yêu cầu từ client: {textLumoCallServer}")
+        logger.info(f"Phản hồi từ Gemini: {response.text}")
 
         return {
             "idLumo": idLumo,
@@ -182,6 +195,8 @@ async def version2(
     model="gemini-3.1-flash-lite-preview",
     contents=prompt
     )
+    logger.info(f"Yêu cầu từ client: {textLumoCallServer}")
+    logger.info(f"Phản hồi từ Gemini: {response.text}")
     return {
             # "prompt": prompt,
             "response": response.text
@@ -265,6 +280,8 @@ async def version3(
             "search_context_size": "low"   # low = nhanh hơn
         }
     }
+    logger.info(f"Yêu cầu từ client: {textLumoCallServer}")
+    logger.info(f"Prompt gửi đến Perplexity: {prompt}")
     response = requests.post(url, headers=headers, json=data)
     payload = response.json()
     return payload["choices"][0]["message"]["content"]
