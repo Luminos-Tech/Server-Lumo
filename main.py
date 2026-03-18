@@ -8,6 +8,7 @@ from google import genai
 from google.genai import types
 from datetime import datetime
 from zoneinfo import ZoneInfo
+import re
 
 import logging
 load_dotenv()
@@ -32,6 +33,37 @@ if not GEMINI_API_KEY:
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+def get_lumo_history_string(file_path, limit=20):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            log_data = f.read()
+
+        # 1. Trích xuất tất cả câu hỏi của User
+        user_queries = re.findall(r"textLumoCallServer=(.*?), name", log_data)
+        
+        # 2. Trích xuất tất cả phản hồi từ Parsed AI Result
+        llm_responses = re.findall(r"Parsed AI Result: \{['\"]textRes['\"]: ['\"](.*?)['\"]\}", log_data)
+
+        # 3. Kết hợp và lấy 20 cặp cuối cùng
+        history = list(zip(user_queries, llm_responses))
+        latest_history = history[-limit:]
+
+        if not latest_history:
+            return ""
+
+        # 4. Gom tất cả thành một chuỗi duy nhất
+        history_lines = []
+        for user, llm in latest_history:
+            history_lines.append(f"user: {user}")
+            history_lines.append(f"LLM: {llm}")
+        
+        # Trả về chuỗi các cặp hội thoại cách nhau bởi dấu xuống dòng
+        return "\n".join(history_lines)
+
+    except FileNotFoundError:
+        return f"Error: File {file_path} not found."
+    except Exception as e:
+        return f"Error: {str(e)}"
 app = FastAPI()
 
 TAVILY_API_KEY = "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"
@@ -110,6 +142,8 @@ async def version1(
     - Rút kinh nghiệm từ phản hồi của người dùng, cải thiện khả năng hiểu và đáp ứng nhu cầu của họ.
     - Liên tục cập nhật kiến thức, xu hướng mới để giữ cho nội dung trò chuyện luôn hấp dẫn và mới mẻ.
     Time now: {hour}:{minute}:{second} {dateNow}
+    History:
+    {get_lumo_history_string("system.log", limit=40)}
 """
 
         response = client.models.generate_content(
@@ -189,6 +223,8 @@ async def version2(
     Context:
     {search_web_text(textLumoCallServer)}
     Time now: {hour}:{minute}:{second} {dateNow}
+    History:
+    {get_lumo_history_string("system.log", limit=40)}
     """
     response = client.models.generate_content(
     model="gemini-3.1-flash-lite-preview",
@@ -253,6 +289,8 @@ async def version3(
     - Rút kinh nghiệm từ phản hồi của người dùng, cải thiện khả năng hiểu và đáp ứng nhu cầu của họ.
     - Liên tục cập nhật kiến thức, xu hướng mới để giữ cho nội dung trò chuyện luôn hấp dẫn và mới mẻ.
     Time now: {hour}:{minute}:{second} {dateNow}
+    History:
+    {get_lumo_history_string("system.log", limit=40)}
     """
     API_KEY = os.getenv("PERPLEXITY_API_KEY")
     if not API_KEY:
@@ -280,7 +318,7 @@ async def version3(
         }
     }
     logger.info(f"Yêu cầu từ client: {textLumoCallServer}")
-    logger.info(f"Prompt gửi đến Perplexity: {prompt}")
+    logger.info(f"Phản hồi từ Perplexity: {payload['choices'][0]['message']['content']}")
     response = requests.post(url, headers=headers, json=data)
     payload = response.json()
     return payload["choices"][0]["message"]["content"]
