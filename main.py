@@ -9,8 +9,7 @@ from google.genai import types
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from uvicorn import logging
-
+import logging
 load_dotenv()
 
 # =========================
