@@ -143,6 +143,7 @@ async def version1(
     - Liên tục cập nhật kiến thức, xu hướng mới để giữ cho nội dung trò chuyện luôn hấp dẫn và mới mẻ.
     Time now: {hour}:{minute}:{second} {dateNow}
     History:
+    Toi la user. Ban la Lumo.
     {get_lumo_history_string("system.log", limit=40)}
 """
 
@@ -157,8 +158,8 @@ async def version1(
                 ]
             )
         )
-        logger.info(f"Yêu cầu từ client: {textLumoCallServer}")
-        logger.info(f"Phản hồi từ Gemini: {response.text}")
+        logger.info(f"user: {textLumoCallServer}")
+        logger.info(f"Lumo: {response.text}")
 
         return {
             "idLumo": idLumo,
@@ -224,14 +225,15 @@ async def version2(
     {search_web_text(textLumoCallServer)}
     Time now: {hour}:{minute}:{second} {dateNow}
     History:
+    Toi la user. Ban la Lumo.
     {get_lumo_history_string("system.log", limit=40)}
     """
     response = client.models.generate_content(
     model="gemini-3.1-flash-lite-preview",
     contents=prompt
     )
-    logger.info(f"Yêu cầu từ client: {textLumoCallServer}")
-    logger.info(f"Phản hồi từ Gemini: {response.text}")
+    logger.info(f"user: {textLumoCallServer}")
+    logger.info(f"Lumo: {response.text}")
     return {
             # "prompt": prompt,
             "response": response.text
@@ -290,6 +292,7 @@ async def version3(
     - Liên tục cập nhật kiến thức, xu hướng mới để giữ cho nội dung trò chuyện luôn hấp dẫn và mới mẻ.
     Time now: {hour}:{minute}:{second} {dateNow}
     History:
+    Toi la user. Ban la Lumo.
     {get_lumo_history_string("system.log", limit=40)}
     """
     API_KEY = os.getenv("PERPLEXITY_API_KEY")
@@ -317,8 +320,9 @@ async def version3(
             "search_context_size": "low"   # low = nhanh hơn
         }
     }
-    logger.info(f"Yêu cầu từ client: {textLumoCallServer}")
-    logger.info(f"Phản hồi từ Perplexity: {payload['choices'][0]['message']['content']}")
+
+    logger.info(f"user: {textLumoCallServer}")
+    logger.info(f"Lumo: {payload['choices'][0]['message']['content']}")
     response = requests.post(url, headers=headers, json=data)
     payload = response.json()
     return payload["choices"][0]["message"]["content"]
