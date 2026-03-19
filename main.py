@@ -10,9 +10,23 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import re
 
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
+
+from ServerDB.database import SessionLocal, engine, Base
+from ServerDB.schemas import UserCreate, UserResponse
+from ServerDB.crud import create_user, get_users
+
 import logging
 load_dotenv()
 
+Base.metadata.create_all(bind=engine)
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 # =========================
 # CONFIG
 # =========================
@@ -320,9 +334,21 @@ async def version3(
             "search_context_size": "low"   # low = nhanh hơn
         }
     }
+    response = requests.post(url, headers=headers, json=data)
+    payload = response.json()
 
     logger.info(f"user: {textLumoCallServer}")
     logger.info(f"Lumo: {payload['choices'][0]['message']['content']}")
-    response = requests.post(url, headers=headers, json=data)
-    payload = response.json()
     return payload["choices"][0]["message"]["content"]
+
+@app.get("/")
+def root():
+    return {"message": "CSDL Server is running!"}
+
+@app.post("/users", response_model=UserResponse)
+def api_create_user(user: UserCreate, db: Session = Depends(get_db)):
+    return create_user(db, user)
+
+@app.get("/users", response_model=list[UserResponse])
+def api_get_users(name: str | None = None, db: Session = Depends(get_db)):
+    return get_users(db, name)

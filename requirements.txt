@@ -4,3 +4,7 @@ sqlmodel
 python-dotenv
 google-generativeai
 google-genai
+sqlalchemy
+psycopg2-binary
+pydantic
+email-validator
