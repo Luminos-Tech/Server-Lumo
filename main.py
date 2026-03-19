@@ -1,3 +1,4 @@
+from ast import List
 from logging.handlers import TimedRotatingFileHandler
 import os
 from pathlib import Path
@@ -9,13 +10,12 @@ from google.genai import types
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import re
-
+from typing import List
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 
 from ServerDB.database import SessionLocal, engine, Base
-from ServerDB.schemas import UserCreate, UserResponse
-from ServerDB.crud import create_user, get_users
+from ServerDB import crud, models, schemas
 
 import logging
 load_dotenv()
@@ -104,7 +104,7 @@ def search_web_text(query: str) -> str:
     data = resp.json()
     return data.get("answer", "Không có answer")
 
-@app.get("/version1")
+@app.get("/version1", tags=["LUMO Versions"])
 async def version1(
     idLumo: int = 1,
     textLumoCallServer: str = Query(..., min_length=1),
@@ -185,7 +185,7 @@ async def version1(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@app.get("/version2")
+@app.get("/version2", tags=["LUMO Versions"])
 async def version2(
     idLumo: int = 1,
     textLumoCallServer: str = Query(..., min_length=1),
@@ -254,7 +254,7 @@ async def version2(
     }
 
     
-@app.get("/version3")
+@app.get("/version3", tags=["LUMO Versions"])
 async def version3(
     idLumo: int = 1,
     textLumoCallServer: str = Query(..., min_length=1),
@@ -341,14 +341,53 @@ async def version3(
     logger.info(f"Lumo: {payload['choices'][0]['message']['content']}")
     return payload["choices"][0]["message"]["content"]
 
-@app.get("/")
-def root():
-    return {"message": "CSDL Server is running!"}
+# ================= USER API =================
+@app.post("/users/", response_model=schemas.UserResponse, tags=["Users"])
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    # Kiểm tra email trùng
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    return crud.create_user(db=db, user=user)
 
-@app.post("/users", response_model=UserResponse)
-def api_create_user(user: UserCreate, db: Session = Depends(get_db)):
-    return create_user(db, user)
+@app.get("/users/", response_model=List[schemas.UserResponse], tags=["Users"])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_users(db, skip=skip, limit=limit)
 
-@app.get("/users", response_model=list[UserResponse])
-def api_get_users(name: str | None = None, db: Session = Depends(get_db)):
-    return get_users(db, name)
+@app.delete("/users/{user_id}", tags=["Users"])
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    deleted = crud.delete_user(db, user_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "User deleted successfully"}
+
+# ================= DEVICE API =================
+@app.post("/devices/", response_model=schemas.DeviceResponse, tags=["Devices"])
+def create_device(device: schemas.DeviceCreate, db: Session = Depends(get_db)):
+    db_device = db.query(models.Device).filter(models.Device.device_code == device.device_code).first()
+    if db_device:
+        raise HTTPException(status_code=400, detail="Device code already exists")
+    return crud.create_device(db=db, device=device)
+
+@app.get("/devices/", response_model=List[schemas.DeviceResponse], tags=["Devices"])
+def read_devices(db: Session = Depends(get_db)):
+    return crud.get_devices(db)
+
+@app.delete("/devices/{device_id}", tags=["Devices"])
+def delete_device(device_id: int, db: Session = Depends(get_db)):
+    deleted = crud.delete_device(db, device_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Device not found")
+    return {"message": "Device deleted successfully"}
+
+# ================= EVENT API (Cho ESP32) =================
+@app.post("/events/", response_model=schemas.EventResponse, tags=["Events"])
+def log_button_event(event: schemas.EventCreate, db: Session = Depends(get_db)):
+    created_event = crud.create_event(db=db, event=event)
+    if not created_event:
+        raise HTTPException(status_code=404, detail="Device code not found. Please register device first.")
+    return created_event
+
+@app.get("/events/", response_model=List[schemas.EventResponse], tags=["Events"])
+def read_events(limit: int = 50, db: Session = Depends(get_db)):
+    return crud.get_events(db, limit=limit)
