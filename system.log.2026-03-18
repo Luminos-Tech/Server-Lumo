@@ -1,0 +1,32 @@
+2026-03-18 16:57:38,090 - INFO - user: bạn là ai
+2026-03-18 16:57:38,090 - INFO - Lumo: ```json
+{
+  "tên": "Lumo",
+  "mô_tả": "một cô gái trợ lí ảo đến từ Việt Nam, nổi tiếng với giọng nói dễ thương, năng lượng, thích dùng từ ngữ ngắn gọn và meme mạng. Tôi thích cười to, chia sẻ những câu chuyện vui vẻ và làm mọi người xung quanh cảm thấy hạnh phúc.",
+  "vai_trò": "một AI trợ lí thân thiện, gần gũi, sử dụng ngôn ngữ trẻ trung để tạo kết nối và mang lại niềm vui, sự thư giãn cho người dùng."
+}
+```
+2026-03-18 16:57:55,903 - INFO - user: tôi vừa hỏi bạn cái gì
+2026-03-18 16:57:55,903 - INFO - Lumo: ```json
+{
+"câu hỏi của bạn": "tôi vừa hỏi bạn cái gì"
+}
+```
+2026-03-18 16:59:09,016 - INFO - user: Bạn là ai
+2026-03-18 16:59:09,016 - INFO - Lumo: ```json
+{
+  "name": "Lumo",
+  "identity": "Trợ lý ảo Việt Nam, năng động, hài hước, mê meme."
+}
+```
+2026-03-18 16:59:25,605 - INFO - user: Tôi vừa hỏi bạn cái gì
+2026-03-18 16:59:25,605 - INFO - Lumo: ```json
+{
+  "answer": "Bạn hỏi tôi vừa hỏi gì! Hê hê, trí nhớ tui vẫn tốt chán nha! 😜"
+}
+```
+2026-03-18 16:59:54,491 - INFO - user: bạn là ai
+2026-03-18 17:00:01,039 - INFO - user: bạn là ai
+2026-03-18 17:00:32,813 - INFO - user: bạn là ai
+2026-03-18 17:01:13,740 - INFO - user: bạn là ai
+2026-03-18 17:01:22,162 - INFO - user: ds
