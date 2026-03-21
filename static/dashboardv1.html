@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMO Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #080a0e;
+            --bg2: #0d1017;
+            --surface: #111419;
+            --surface2: #161b23;
+            --surface3: #1c2330;
+            --border: #1e2530;
+            --border2: #252e3d;
+            --border3: #2d3849;
+            --text: #d4dbe8;
+            --text2: #8a95a8;
+            --text3: #4a5568;
+            --accent: #4f9cf9;
+            --accent2: #3b82f6;
+            --green: #34d399;
+            --green2: #10b981;
+            --yellow: #fbbf24;
+            --red: #f87171;
+            --purple: #a78bfa;
+            --mono: 'DM Mono', monospace;
+            --sans: 'Outfit', sans-serif;
+            --r: 8px;
+            --r2: 12px;
+            --tr: 0.18s ease;
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border3);
+            border-radius: 2px
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 220px;
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 50
+        }
+
+        .sidebar-logo {
+            padding: 22px 20px 18px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 10px
+        }
+
+        .logo-text {
+            font-family: var(--sans);
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.02em
+        }
+
+        .logo-text span {
+            color: var(--accent);
+            font-weight: 300
+        }
+
+        .logo-sub {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 2px;
+            font-family: var(--mono)
+        }
+
+        .nav-section {
+            padding: 0 12px;
+            margin-bottom: 4px
+        }
+
+        .nav-label {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            color: var(--text3);
+            padding: 8px 8px 4px;
+            font-weight: 500
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: var(--r);
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text2);
+            transition: background var(--tr), color var(--tr);
+            border: 1px solid transparent;
+            margin-bottom: 2px;
+            position: relative
+        }
+
+        .nav-item:hover {
+            background: var(--surface);
+            color: var(--text)
+        }
+
+        .nav-item.active {
+            background: var(--surface2);
+            color: var(--text);
+            border-color: var(--border2)
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            border-radius: 0 2px 2px 0;
+            background: var(--accent)
+        }
+
+        .nav-icon {
+            font-size: 15px;
+            width: 20px;
+            text-align: center
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            font-family: var(--mono);
+            font-size: 10px;
+            padding: 1px 7px;
+            border-radius: 20px;
+            background: var(--surface3);
+            color: var(--text3);
+            border: 1px solid var(--border2)
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding: 12px;
+            border-top: 1px solid var(--border)
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            border-radius: var(--r)
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text3);
+            transition: background 0.3s, box-shadow 0.3s;
+            flex-shrink: 0
+        }
+
+        .status-dot.online {
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green2)
+        }
+
+        .status-dot.offline {
+            background: var(--red)
+        }
+
+        .status-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .status-label {
+            font-size: 11px;
+            color: var(--text2);
+            font-weight: 500
+        }
+
+        .status-url {
+            font-size: 10px;
+            color: var(--text3);
+            font-family: var(--mono);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        /* MAIN */
+        .main {
+            margin-left: 220px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column
+        }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: rgba(8, 10, 14, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 28px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            gap: 16px
+        }
+
+        .page-title {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: -0.01em
+        }
+
+        .page-sub {
+            font-size: 12px;
+            color: var(--text3);
+            margin-left: 4px
+        }
+
+        .topbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .url-label {
+            font-size: 11px;
+            color: var(--text3);
+            font-family: var(--mono)
+        }
+
+        .url-input {
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 6px;
+            outline: none;
+            width: 220px;
+            transition: border-color var(--tr)
+        }
+
+        .url-input:focus {
+            border-color: var(--border3)
+        }
+
+        .content {
+            padding: 28px;
+            flex: 1
+        }
+
+        .panel {
+            display: none;
+            animation: fadeIn 0.2s ease
+        }
+
+        .panel.active {
+            display: block
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* STATS */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 24px
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            padding: 16px 18px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+            opacity: 0.6
+        }
+
+        .stat-card.green::after {
+            background: var(--green)
+        }
+
+        .stat-card.yellow::after {
+            background: var(--yellow)
+        }
+
+        .stat-card.purple::after {
+            background: var(--purple)
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text3);
+            letter-spacing: 0.06em;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-bottom: 8px
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            font-family: var(--mono);
+            letter-spacing: -0.02em;
+            line-height: 1
+        }
+
+        .stat-sub {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 5px
+        }
+
+        /* CARD */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            overflow: hidden;
+            margin-bottom: 16px
+        }
+
+        .card-head {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg2)
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: -0.01em
+        }
+
+        .card-sub {
+            font-size: 11px;
+            color: var(--text3);
+            margin-left: 4px
+        }
+
+        .card-body {
+            padding: 18px
+        }
+
+        .card-body.np {
+            padding: 0
+        }
+
+        /* VERSIONS */
+        .version-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 18px
+        }
+
+        .version-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: border-color var(--tr), background var(--tr);
+            position: relative;
+            overflow: hidden
+        }
+
+        .version-card:hover {
+            border-color: var(--border3);
+            background: var(--surface3)
+        }
+
+        .version-card.active {
+            border-color: var(--accent);
+            background: rgba(79, 156, 249, 0.05)
+        }
+
+        .version-card.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent)
+        }
+
+        .v-num {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--text3);
+            margin-bottom: 4px;
+            letter-spacing: 0.06em
+        }
+
+        .v-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 3px
+        }
+
+        .v-model {
+            font-size: 11px;
+            color: var(--text2);
+            font-family: var(--mono)
+        }
+
+        .v-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px
+        }
+
+        .vtag {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            color: var(--text3);
+            font-family: var(--mono)
+        }
+
+        .vtag.blue {
+            border-color: rgba(79, 156, 249, 0.3);
+            color: var(--accent);
+            background: rgba(79, 156, 249, 0.08)
+        }
+
+        .vtag.green {
+            border-color: rgba(52, 211, 153, 0.3);
+            color: var(--green);
+            background: rgba(52, 211, 153, 0.08)
+        }
+
+        /* QUERY */
+        .query-wrap {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px
+        }
+
+        .query-input {
+            flex: 1;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 14px;
+            padding: 11px 16px;
+            border-radius: var(--r);
+            outline: none;
+            transition: border-color var(--tr), box-shadow var(--tr)
+        }
+
+        .query-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79, 156, 249, 0.1)
+        }
+
+        .query-input::placeholder {
+            color: var(--text3)
+        }
+
+        /* BUTTONS */
+        .btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-family: var(--sans);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 11px 22px;
+            border-radius: var(--r);
+            transition: background var(--tr), transform var(--tr);
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px
+        }
+
+        .btn:hover {
+            background: var(--accent2)
+        }
+
+        .btn:active {
+            transform: scale(0.98)
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none
+        }
+
+        .btn-outline {
+            background: none;
+            color: var(--text2);
+            border: 1px solid var(--border2);
+            font-family: var(--sans);
+            font-size: 12px;
+            padding: 7px 14px;
+            border-radius: var(--r);
+            cursor: pointer;
+            transition: border-color var(--tr), color var(--tr), background var(--tr);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .btn-outline:hover {
+            border-color: var(--border3);
+            color: var(--text);
+            background: var(--surface2)
+        }
+
+        .btn-danger {
+            background: none;
+            color: var(--red);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background var(--tr), border-color var(--tr)
+        }
+
+        .btn-danger:hover {
+            background: rgba(248, 113, 113, 0.08);
+            border-color: rgba(248, 113, 113, 0.4)
+        }
+
+        /* RESPONSE */
+        .resp-container {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            overflow: hidden;
+            transition: border-color var(--tr)
+        }
+
+        .resp-container.success {
+            border-color: rgba(52, 211, 153, 0.25)
+        }
+
+        .resp-container.error {
+            border-color: rgba(248, 113, 113, 0.25)
+        }
+
+        .resp-topbar {
+            padding: 10px 16px;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 12px
+        }
+
+        .resp-body {
+            padding: 16px;
+            font-family: var(--sans);
+            font-size: 14px;
+            line-height: 1.8;
+            min-height: 56px;
+            white-space: pre-wrap;
+            word-break: break-word
+        }
+
+        .resp-body.loading {
+            color: var(--text3);
+            font-style: italic
+        }
+
+        .resp-body.err-text {
+            color: var(--red)
+        }
+
+        /* TIMING BADGE */
+        .timing-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-family: var(--mono);
+            font-size: 11px;
+            border: 1px solid var(--border2)
+        }
+
+        .timing-badge.fast {
+            color: var(--green);
+            border-color: rgba(52, 211, 153, 0.3);
+            background: rgba(52, 211, 153, 0.06)
+        }
+
+        .timing-badge.medium {
+            color: var(--yellow);
+            border-color: rgba(251, 191, 36, 0.3);
+            background: rgba(251, 191, 36, 0.06)
+        }
+
+        .timing-badge.slow {
+            color: var(--red);
+            border-color: rgba(248, 113, 113, 0.3);
+            background: rgba(248, 113, 113, 0.06)
+        }
+
+        /* PERF */
+        .perf-section {
+            margin-top: 16px
+        }
+
+        .perf-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px
+        }
+
+        .perf-title {
+            font-size: 11px;
+            color: var(--text3);
+            letter-spacing: 0.06em;
+            text-transform: uppercase
+        }
+
+        .perf-track {
+            height: 6px;
+            background: var(--surface3);
+            border-radius: 3px;
+            overflow: hidden
+        }
+
+        .perf-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: var(--green);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s
+        }
+
+        .perf-marks {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px
+        }
+
+        .perf-mark {
+            font-size: 10px;
+            color: var(--text3);
+            font-family: var(--mono)
+        }
+
+        /* SPARKLINE */
+        .sparkline-wrap {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 40px
+        }
+
+        .spark-bar {
+            flex: 1;
+            min-width: 6px;
+            border-radius: 2px 2px 0 0;
+            background: var(--accent);
+            opacity: 0.5;
+            cursor: default;
+            transition: opacity 0.15s
+        }
+
+        .spark-bar:hover {
+            opacity: 1
+        }
+
+        .spark-bar.fast-bar {
+            background: var(--green)
+        }
+
+        .spark-bar.medium-bar {
+            background: var(--yellow)
+        }
+
+        .spark-bar.slow-bar {
+            background: var(--red)
+        }
+
+        /* TABLE */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .data-table th {
+            text-align: left;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            color: var(--text3);
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg2);
+            white-space: nowrap
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            vertical-align: middle
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none
+        }
+
+        .data-table tbody tr {
+            transition: background var(--tr)
+        }
+
+        .data-table tbody tr:hover td {
+            background: rgba(255, 255, 255, 0.015)
+        }
+
+        /* TAG */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 9px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid var(--border2);
+            color: var(--text2);
+            background: var(--surface2)
+        }
+
+        .tag.green {
+            border-color: rgba(52, 211, 153, 0.3);
+            color: var(--green);
+            background: rgba(52, 211, 153, 0.07)
+        }
+
+        .tag.blue {
+            border-color: rgba(79, 156, 249, 0.3);
+            color: var(--accent);
+            background: rgba(79, 156, 249, 0.07)
+        }
+
+        .tag.yellow {
+            border-color: rgba(251, 191, 36, 0.3);
+            color: var(--yellow);
+            background: rgba(251, 191, 36, 0.07)
+        }
+
+        .tag.red {
+            border-color: rgba(248, 113, 113, 0.3);
+            color: var(--red);
+            background: rgba(248, 113, 113, 0.07)
+        }
+
+        /* FORM */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 12px
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px
+        }
+
+        .form-label {
+            font-size: 11px;
+            color: var(--text3);
+            font-weight: 500;
+            letter-spacing: 0.04em
+        }
+
+        .form-input {
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 13px;
+            padding: 8px 12px;
+            border-radius: var(--r);
+            outline: none;
+            transition: border-color var(--tr), box-shadow var(--tr)
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79, 156, 249, 0.08)
+        }
+
+        .form-input::placeholder {
+            color: var(--text3)
+        }
+
+        .form-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px
+        }
+
+        .form-msg {
+            font-size: 12px;
+            font-family: var(--mono)
+        }
+
+        /* MISC */
+        .mono {
+            font-family: var(--mono);
+            font-size: 12px
+        }
+
+        .muted {
+            color: var(--text3)
+        }
+
+        .dim {
+            color: var(--text2)
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px
+        }
+
+        .lumo-layout {
+            display: grid;
+            grid-template-columns: 1fr 370px;
+            gap: 16px
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 36px 20px;
+            color: var(--text3);
+            font-size: 12px
+        }
+
+        .empty-icon {
+            font-size: 26px;
+            margin-bottom: 8px;
+            opacity: 0.5
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border2);
+            border-top-color: var(--text);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: inline-block;
+            flex-shrink: 0
+        }
+
+        /* TOAST */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none
+        }
+
+        .toast-item {
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            border-radius: var(--r);
+            padding: 10px 16px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: toastIn 0.2s ease, toastOut 0.2s ease 2.8s forwards;
+            pointer-events: all;
+            min-width: 220px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4)
+        }
+
+        .toast-item.ok {
+            border-color: rgba(52, 211, 153, 0.35);
+            color: var(--green)
+        }
+
+        .toast-item.err {
+            border-color: rgba(248, 113, 113, 0.35);
+            color: var(--red)
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0)
+            }
+        }
+
+        @keyframes toastOut {
+            to {
+                opacity: 0;
+                transform: translateX(20px)
+            }
+        }
+
+        @media(max-width:1100px) {
+            .lumo-layout {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media(max-width:900px) {
+            .two-col {
+                grid-template-columns: 1fr
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr 1fr
+            }
+        }
+
+        @media(max-width:768px) {
+            .sidebar {
+                display: none
+            }
+
+            .main {
+                margin-left: 0
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-text">LU<span>MO</span></div>
+            <div class="logo-sub">api dashboard v2</div>
+        </div>
+        <div class="nav-section">
+            <div class="nav-label">CORE</div>
+            <div class="nav-item active" onclick="nav('lumo',this)"><span class="nav-icon">⚡</span>LUMO AI</div>
+            <div class="nav-item" onclick="nav('users',this)"><span class="nav-icon">👤</span>Users<span
+                    class="nav-badge" id="userCount">—</span></div>
+            <div class="nav-item" onclick="nav('devices',this)"><span class="nav-icon">📡</span>Devices<span
+                    class="nav-badge" id="devCount">—</span></div>
+            <div class="nav-item" onclick="nav('events',this)"><span class="nav-icon">📋</span>Events</div>
+        </div>
+        <div class="nav-section" style="margin-top:8px">
+            <div class="nav-label">ANALYTICS</div>
+            <div class="nav-item" onclick="nav('history',this)"><span class="nav-icon">📊</span>History<span
+                    class="nav-badge" id="histCount">0</span></div>
+        </div>
+        <div class="sidebar-bottom">
+            <div class="server-status">
+                <div class="status-dot" id="statusDot"></div>
+                <div class="status-info">
+                    <div class="status-label" id="statusLabel">Checking...</div>
+                    <div class="status-url" id="statusUrl">—</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main">
+        <div class="topbar">
+            <div>
+                <span class="page-title" id="pageTitle">LUMO AI</span>
+                <span class="page-sub" id="pageSub">3 endpoints</span>
+            </div>
+            <div class="topbar-right">
+                <span class="url-label">SERVER</span>
+                <input class="url-input" id="baseUrl" value="https://lumo.vanha2301.online" oninput="onUrlChange()"
+                    onblur="pingServer()">
+                <button class="btn-outline" onclick="pingServer()"><span id="pingTxt">Ping</span></button>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <!-- LUMO PANEL -->
+            <div class="panel active" id="panel-lumo">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Requests</div>
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-sub">tất cả versions</div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-label">Success Rate</div>
+                        <div class="stat-value" id="statSuccess">—</div>
+                        <div class="stat-sub">last 50</div>
+                    </div>
+                    <div class="stat-card yellow">
+                        <div class="stat-label">Avg Latency</div>
+                        <div class="stat-value" id="statAvg">—</div>
+                        <div class="stat-sub">milliseconds</div>
+                    </div>
+                    <div class="stat-card purple">
+                        <div class="stat-label">Fastest Ver</div>
+                        <div class="stat-value" id="statBest">—</div>
+                        <div class="stat-sub">by avg speed</div>
+                    </div>
+                </div>
+                <div class="lumo-layout">
+                    <div>
+                        <div class="card">
+                            <div class="card-head">
+                                <div class="card-title">Chọn Version</div>
+                                <div class="card-sub">— chọn model để test</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="version-grid">
+                                    <div class="version-card active" id="vcard-1" onclick="selectVer(1)">
+                                        <div class="v-num">VERSION 01</div>
+                                        <div class="v-name">Gemini Flash</div>
+                                        <div class="v-model">gemini-2.5-flash</div>
+                                        <div class="v-tags"><span class="vtag blue">Google Search</span><span
+                                                class="vtag">History</span></div>
+                                    </div>
+                                    <div class="version-card" id="vcard-2" onclick="selectVer(2)">
+                                        <div class="v-num">VERSION 02</div>
+                                        <div class="v-name">Flash Lite</div>
+                                        <div class="v-model">gemini-3.1-flash-lite</div>
+                                        <div class="v-tags"><span class="vtag green">Fast</span><span class="vtag">No
+                                                search</span></div>
+                                    </div>
+                                    <div class="version-card" id="vcard-3" onclick="selectVer(3)">
+                                        <div class="v-num">VERSION 03</div>
+                                        <div class="v-name">Sonar</div>
+                                        <div class="v-model">perplexity/sonar</div>
+                                        <div class="v-tags"><span class="vtag blue">Web Search</span><span
+                                                class="vtag">Context</span></div>
+                                    </div>
+                                </div>
+                                <div class="query-wrap">
+                                    <input class="query-input" id="queryInput"
+                                        placeholder="Nhập câu hỏi gửi đến LUMO..."
+                                        onkeydown="if(event.key==='Enter')sendQuery()">
+                                    <button class="btn" id="sendBtn" onclick="sendQuery()"><span id="sendTxt">Gửi
+                                            →</span></button>
+                                </div>
+                                <div id="respWrap" style="display:none">
+                                    <div class="resp-container" id="respBox">
+                                        <div class="resp-topbar">
+                                            <span class="tag blue mono" id="respVer">—</span>
+                                            <span id="respTiming"></span>
+                                            <span id="respStatus"></span>
+                                            <span style="margin-left:auto;font-size:11px;color:var(--text3)"
+                                                id="respAt">—</span>
+                                        </div>
+                                        <div class="resp-body" id="respText"></div>
+                                    </div>
+                                    <div class="perf-section">
+                                        <div class="perf-header">
+                                            <span class="perf-title">Latency Gauge</span>
+                                            <span class="mono muted" id="perfLabel">—</span>
+                                        </div>
+                                        <div class="perf-track">
+                                            <div class="perf-fill" id="perfFill" style="width:0%"></div>
+                                        </div>
+                                        <div class="perf-marks"><span class="perf-mark">0ms</span><span
+                                                class="perf-mark">2.5s</span><span class="perf-mark">5s</span><span
+                                                class="perf-mark">7.5s</span><span class="perf-mark">10s+</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="card" style="margin-bottom:16px">
+                            <div class="card-head">
+                                <div class="card-title">Latency Trend</div>
+                                <div class="card-sub">— last 20 requests</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="sparkline-wrap" id="sparkline">
+                                    <div class="empty-state" style="width:100%;padding:6px 0">
+                                        <div style="font-size:11px">Chưa có data</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex;justify-content:space-between;margin-top:6px"><span
+                                        style="font-size:10px;color:var(--text3)">oldest</span><span
+                                        style="font-size:10px;color:var(--text3)">latest</span></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-head">
+                                <div class="card-title">Version Breakdown</div>
+                            </div>
+                            <div class="card-body np">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>VER</th>
+                                            <th>CALLS</th>
+                                            <th>AVG ms</th>
+                                            <th>OK%</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="verBody">
+                                        <tr>
+                                            <td colspan="4">
+                                                <div class="empty-state" style="padding:16px">
+                                                    <div style="font-size:11px">Gửi request để xem stats</div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORY PANEL -->
+            <div class="panel" id="panel-history">
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">Request History</div>
+                        <span class="nav-badge" style="margin-left:8px" id="histBadge">0</span>
+                        <button class="btn-outline" style="margin-left:auto" onclick="clearHistory()">🗑 Xoá tất
+                            cả</button>
+                    </div>
+                    <div class="card-body np">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>VER</th>
+                                    <th>QUERY</th>
+                                    <th>RESPONSE</th>
+                                    <th>TIME</th>
+                                    <th>STATUS</th>
+                                    <th>LÚC</th>
+                                </tr>
+                            </thead>
+                            <tbody id="histBody">
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">📭</div>
+                                            <div>Chưa có lịch sử</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- USERS PANEL -->
+            <div class="panel" id="panel-users">
+                <div class="two-col" style="margin-bottom:16px">
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-head">
+                            <div class="card-title">Thêm User mới</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-grid">
+                                <div class="form-field"><label class="form-label">FULL NAME</label><input
+                                        class="form-input" id="u_name" placeholder="Nguyen Van A"></div>
+                                <div class="form-field"><label class="form-label">EMAIL</label><input class="form-input"
+                                        id="u_email" type="email" placeholder="a@example.com"></div>
+                                <div class="form-field"><label class="form-label">PASSWORD</label><input
+                                        class="form-input" id="u_pass" type="password" placeholder="••••••••"></div>
+                            </div>
+                            <div class="form-actions"><button class="btn" onclick="createUser()">Tạo User</button><span
+                                    class="form-msg" id="userMsg"></span></div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-head">
+                            <div class="card-title">Thống kê Users</div>
+                        </div>
+                        <div class="card-body" id="userStats">
+                            <div class="muted" style="font-size:12px">Nhấn Refresh để xem</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">Danh sách Users</div><button class="btn-outline"
+                            style="margin-left:auto" onclick="loadUsers()">↻ Refresh</button>
+                    </div>
+                    <div class="card-body np">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>FULL NAME</th>
+                                    <th>EMAIL</th>
+                                    <th>ROLE</th>
+                                    <th>CREATED</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersBody">
+                                <tr>
+                                    <td colspan="6">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">👤</div>
+                                            <div>Nhấn Refresh để tải</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DEVICES PANEL -->
+            <div class="panel" id="panel-devices">
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">Thêm Device mới</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <div class="form-field"><label class="form-label">DEVICE NAME</label><input
+                                    class="form-input" id="d_name" placeholder="ESP32-01"></div>
+                            <div class="form-field"><label class="form-label">DEVICE CODE</label><input
+                                    class="form-input" id="d_code" placeholder="ESP32_LUMO_001"></div>
+                            <div class="form-field"><label class="form-label">LOCATION</label><input class="form-input"
+                                    id="d_loc" placeholder="Phòng khách"></div>
+                            <div class="form-field"><label class="form-label">VARIANT</label><input class="form-input"
+                                    id="d_var" placeholder="standard" value="standard"></div>
+                        </div>
+                        <div class="form-actions"><button class="btn" onclick="createDevice()">Thêm Device</button><span
+                                class="form-msg" id="devMsg"></span></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">Danh sách Devices</div><button class="btn-outline"
+                            style="margin-left:auto" onclick="loadDevices()">↻ Refresh</button>
+                    </div>
+                    <div class="card-body np">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>NAME</th>
+                                    <th>CODE</th>
+                                    <th>STATUS</th>
+                                    <th>LOCATION</th>
+                                    <th>VARIANT</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="devicesBody">
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">📡</div>
+                                            <div>Nhấn Refresh để tải</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EVENTS PANEL -->
+            <div class="panel" id="panel-events">
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">Button Events</div>
+                        <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
+                            <span style="font-size:12px;color:var(--text3)">Limit</span>
+                            <input id="evLimit" type="number" value="50" min="1" max="500" class="form-input"
+                                style="width:70px;padding:5px 8px">
+                            <button class="btn-outline" onclick="loadEvents()">↻ Refresh</button>
+                        </div>
+                    </div>
+                    <div class="card-body np">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>EVENT ID</th>
+                                    <th>DEVICE ID</th>
+                                    <th>BUTTON STATE</th>
+                                    <th>CREATED AT</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventsBody">
+                                <tr>
+                                    <td colspan="4">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">📋</div>
+                                            <div>Nhấn Refresh để tải</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        const PAGE_META = { lumo: { title: 'LUMO AI', sub: '3 endpoints' }, users: { title: 'Users', sub: 'GET · POST · DELETE' }, devices: { title: 'Devices', sub: 'GET · POST · DELETE' }, events: { title: 'Events', sub: 'GET /events/' }, history: { title: 'History', sub: 'request log' } };
+        let selVer = 1;
+        let hist = JSON.parse(localStorage.getItem('lh3') || '[]');
+
+        function getBase() { return document.getElementById('baseUrl').value.replace(/\/$/, '') }
+        function onUrlChange() { localStorage.setItem('lb3', document.getElementById('baseUrl').value); document.getElementById('statusUrl').textContent = getBase() }
+        const sb = localStorage.getItem('lb3'); if (sb) document.getElementById('baseUrl').value = sb;
+        document.getElementById('statusUrl').textContent = getBase();
+
+        async function pingServer() {
+            const dot = document.getElementById('statusDot'), lbl = document.getElementById('statusLabel'), btn = document.getElementById('pingTxt');
+            btn.textContent = '...';
+            try { const t = Date.now(); await fetch(getBase() + '/docs', { method: 'HEAD', signal: AbortSignal.timeout(5000) }); const ms = Date.now() - t; dot.className = 'status-dot online'; lbl.textContent = `Online · ${ms}ms`; }
+            catch { dot.className = 'status-dot offline'; lbl.textContent = 'Offline'; }
+            btn.textContent = 'Ping';
+        }
+        pingServer(); setInterval(pingServer, 20000);
+
+        function nav(name, el) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            el.classList.add('active');
+            const m = PAGE_META[name];
+            document.getElementById('pageTitle').textContent = m.title;
+            document.getElementById('pageSub').textContent = m.sub;
+            if (name === 'users') loadUsers();
+            if (name === 'devices') loadDevices();
+            if (name === 'events') loadEvents();
+            if (name === 'history') renderHistory();
+        }
+
+        function selectVer(v) { selVer = v;[1, 2, 3].forEach(i => document.getElementById('vcard-' + i).classList.toggle('active', i === v)); }
+
+        async function sendQuery() {
+            const text = document.getElementById('queryInput').value.trim();
+            if (!text) { toast('⚠ Nhập câu hỏi trước', 'err'); return; }
+            const btn = document.getElementById('sendBtn'); btn.disabled = true;
+            document.getElementById('sendTxt').innerHTML = '<span class="spinner"></span>';
+            const rw = document.getElementById('respWrap'), rb = document.getElementById('respBox'), rt = document.getElementById('respText');
+            rw.style.display = 'block'; rb.className = 'resp-container';
+            rt.className = 'resp-body loading'; rt.textContent = 'Đang chờ LUMO phản hồi...';
+            document.getElementById('respVer').textContent = 'v' + selVer;
+            document.getElementById('respTiming').innerHTML = '<span class="spinner" style="width:10px;height:10px"></span>';
+            document.getElementById('respStatus').innerHTML = '';
+            document.getElementById('respAt').textContent = new Date().toLocaleTimeString('vi-VN');
+            const url = `${getBase()}/version${selVer}?textLumoCallServer=${encodeURIComponent(text)}`;
+            const t0 = performance.now(); let elapsed = 0, ok = true, respTxt = '';
+            try {
+                const res = await fetch(url); elapsed = Math.round(performance.now() - t0);
+                if (!res.ok) { const e = await res.json().catch(() => ({ detail: 'HTTP ' + res.status })); throw new Error(e.detail || 'HTTP ' + res.status); }
+                const data = await res.json();
+                respTxt = typeof data === 'string' ? data : (data.response || data.textRes || JSON.stringify(data, null, 2));
+                rt.className = 'resp-body'; rt.textContent = respTxt; rb.classList.add('success');
+            } catch (e) { elapsed = Math.round(performance.now() - t0); ok = false; respTxt = e.message; rt.className = 'resp-body err-text'; rt.textContent = '⚠ ' + respTxt; rb.classList.add('error'); }
+            const tc = elapsed < 1500 ? 'fast' : elapsed < 4000 ? 'medium' : 'slow';
+            document.getElementById('respTiming').innerHTML = `<span class="timing-badge ${tc}">⏱ ${elapsed}ms</span>`;
+            document.getElementById('respStatus').innerHTML = ok ? '<span class="tag green">✓ OK</span>' : '<span class="tag red">✗ Error</span>';
+            const pct = Math.min(100, (elapsed / 10000) * 100);
+            const fill = document.getElementById('perfFill'); fill.style.width = pct + '%';
+            fill.style.background = elapsed < 1500 ? 'var(--green)' : elapsed < 4000 ? 'var(--yellow)' : 'var(--red)';
+            document.getElementById('perfLabel').textContent = elapsed + 'ms';
+            hist.unshift({ v: selVer, q: text, r: respTxt, ms: elapsed, ok, ts: Date.now() });
+            if (hist.length > 100) hist.pop();
+            localStorage.setItem('lh3', JSON.stringify(hist));
+            updateStats(); renderSparkline(); renderVerStats();
+            document.getElementById('histCount').textContent = hist.length;
+            document.getElementById('histBadge').textContent = hist.length;
+            btn.disabled = false; document.getElementById('sendTxt').textContent = 'Gửi →';
+            ok ? toast(`✓ Phản hồi trong ${elapsed}ms`, 'ok') : toast('✗ Lỗi: ' + respTxt.slice(0, 50), 'err');
+        }
+
+        function updateStats() {
+            document.getElementById('statTotal').textContent = hist.length;
+            if (!hist.length) return;
+            const l50 = hist.slice(0, 50);
+            document.getElementById('statSuccess').textContent = Math.round(l50.filter(h => h.ok).length / l50.length * 100) + '%';
+            const okh = hist.filter(h => h.ok);
+            document.getElementById('statAvg').textContent = okh.length ? Math.round(okh.reduce((a, h) => a + h.ms, 0) / okh.length) + 'ms' : '—';
+            let best = '—', bestAvg = Infinity;
+            [1, 2, 3].forEach(v => { const vh = hist.filter(h => h.v === v && h.ok); if (vh.length) { const avg = vh.reduce((a, h) => a + h.ms, 0) / vh.length; if (avg < bestAvg) { bestAvg = avg; best = 'v' + v; } } });
+            document.getElementById('statBest').textContent = best;
+        }
+
+        function renderSparkline() {
+            const el = document.getElementById('sparkline');
+            const items = hist.slice(0, 20).reverse();
+            if (!items.length) { el.innerHTML = '<div class="empty-state" style="width:100%;padding:6px 0"><div style="font-size:11px">Chưa có data</div></div>'; return; }
+            const maxMs = Math.max(...items.map(h => h.ms), 1);
+            el.innerHTML = items.map(h => { const hp = Math.max(10, (h.ms / maxMs) * 100); const cls = h.ms < 1500 ? 'fast-bar' : h.ms < 4000 ? 'medium-bar' : 'slow-bar'; return `<div class="spark-bar ${cls}" style="height:${hp}%" title="v${h.v}: ${h.ms}ms"></div>`; }).join('');
+        }
+
+        function renderVerStats() {
+            const body = document.getElementById('verBody');
+            const rows = [1, 2, 3].map(v => {
+                const vh = hist.filter(h => h.v === v);
+                if (!vh.length) return `<tr><td><span class="tag">v${v}</span></td><td class="muted">0</td><td class="muted">—</td><td class="muted">—</td></tr>`;
+                const avg = Math.round(vh.reduce((a, h) => a + h.ms, 0) / vh.length);
+                const rate = Math.round(vh.filter(h => h.ok).length / vh.length * 100);
+                const c = avg < 1500 ? 'var(--green)' : avg < 4000 ? 'var(--yellow)' : 'var(--red)';
+                return `<tr><td><span class="tag blue">v${v}</span></td><td class="mono">${vh.length}</td><td class="mono" style="color:${c}">${avg}</td><td class="mono" style="color:${rate > 90 ? 'var(--green)' : rate > 70 ? 'var(--yellow)' : 'var(--red)'}">${rate}%</td></tr>`;
+            });
+            body.innerHTML = rows.join('');
+        }
+
+        function renderHistory() {
+            const body = document.getElementById('histBody');
+            if (!hist.length) { body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📭</div><div>Chưa có lịch sử</div></div></td></tr>'; return; }
+            body.innerHTML = hist.map((h, i) => {
+                const t = new Date(h.ts).toLocaleTimeString('vi-VN');
+                const q = h.q.length > 50 ? h.q.slice(0, 50) + '…' : h.q;
+                const r = h.r.length > 70 ? h.r.slice(0, 70) + '…' : h.r;
+                const tc = h.ms < 1500 ? 'green' : h.ms < 4000 ? 'yellow' : 'red';
+                return `<tr><td class="mono muted">${hist.length - i}</td><td><span class="tag blue">v${h.v}</span></td><td title="${h.q}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q}</td><td title="${h.r}" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)">${r}</td><td><span class="tag ${tc} mono">${h.ms}ms</span></td><td>${h.ok ? '<span class="tag green">✓</span>' : '<span class="tag red">✗</span>'}</td><td class="mono muted">${t}</td></tr>`;
+            }).join('');
+        }
+
+        function clearHistory() { if (!confirm('Xoá toàn bộ lịch sử?')) return; hist = []; localStorage.removeItem('lh3'); renderHistory();['histCount', 'histBadge'].forEach(id => document.getElementById(id).textContent = '0'); updateStats(); renderSparkline(); renderVerStats(); toast('🗑 Đã xoá', 'ok'); }
+
+        async function loadUsers() {
+            const body = document.getElementById('usersBody');
+            body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><span class="spinner"></span></div></td></tr>`;
+            try {
+                const res = await fetch(getBase() + '/users/'); if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json(); document.getElementById('userCount').textContent = data.length;
+                const roles = {}; data.forEach(u => roles[u.role] = (roles[u.role] || 0) + 1);
+                document.getElementById('userStats').innerHTML = `<div style="display:flex;gap:20px;flex-wrap:wrap">${[['TOTAL', data.length], ...Object.entries(roles)].map(([l, v]) => `<div><div class="form-label" style="margin-bottom:4px">${l.toUpperCase()}</div><div class="mono" style="font-size:22px;font-weight:700">${v}</div></div>`).join('')}</div>`;
+                if (!data.length) { body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👤</div><div>Không có user</div></div></td></tr>`; return; }
+                body.innerHTML = data.map(u => `<tr><td class="mono muted">${u.id}</td><td style="font-weight:500">${u.full_name}</td><td class="dim mono" style="font-size:12px">${u.email}</td><td><span class="tag ${u.role === 'admin' ? 'yellow' : 'blue'}">${u.role}</span></td><td class="mono muted" style="font-size:12px">${fmtDate(u.created_at)}</td><td><button class="btn-danger" onclick="deleteUser(${u.id})">Xoá</button></td></tr>`).join('');
+            } catch (e) { body.innerHTML = `<tr><td colspan="6"><div class="empty-state" style="color:var(--red)">${e.message}</div></td></tr>`; toast('✗ ' + e.message, 'err'); }
+        }
+
+        async function createUser() {
+            const msg = document.getElementById('userMsg');
+            const name = document.getElementById('u_name').value.trim(), email = document.getElementById('u_email').value.trim(), pass = document.getElementById('u_pass').value.trim();
+            if (!name || !email || !pass) { msg.textContent = '⚠ Điền đủ thông tin'; msg.style.color = 'var(--red)'; return; }
+            msg.textContent = 'Đang tạo...'; msg.style.color = 'var(--text3)';
+            try {
+                const res = await fetch(getBase() + '/users/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ full_name: name, email, password: pass }) });
+                const data = await res.json(); if (!res.ok) throw new Error(data.detail || 'Lỗi');
+                msg.textContent = `✓ Tạo xong #${data.id}`; msg.style.color = 'var(--green)';
+                ['u_name', 'u_email', 'u_pass'].forEach(id => document.getElementById(id).value = '');
+                toast('✓ Tạo user thành công', 'ok'); loadUsers();
+            } catch (e) { msg.textContent = '✗ ' + e.message; msg.style.color = 'var(--red)'; toast('✗ ' + e.message, 'err'); }
+        }
+
+        async function deleteUser(id) { if (!confirm(`Xoá user #${id}?`)) return; try { await fetch(getBase() + `/users/${id}`, { method: 'DELETE' }); toast(`✓ Đã xoá user #${id}`, 'ok'); loadUsers(); } catch (e) { toast('✗ ' + e.message, 'err'); } }
+
+        async function loadDevices() {
+            const body = document.getElementById('devicesBody');
+            body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><span class="spinner"></span></div></td></tr>`;
+            try {
+                const res = await fetch(getBase() + '/devices/'); if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json(); document.getElementById('devCount').textContent = data.length;
+                if (!data.length) { body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📡</div><div>Không có device</div></div></td></tr>`; return; }
+                body.innerHTML = data.map(d => `<tr><td class="mono muted">${d.device_id}</td><td style="font-weight:500">${d.device_name}</td><td class="mono" style="font-size:12px">${d.device_code}</td><td><span class="tag ${d.status === 'active' ? 'green' : 'red'}">${d.status}</span></td><td class="dim">${d.location || '—'}</td><td><span class="tag">${d.device_variant || 'standard'}</span></td><td><button class="btn-danger" onclick="deleteDevice(${d.device_id})">Xoá</button></td></tr>`).join('');
+            } catch (e) { body.innerHTML = `<tr><td colspan="7"><div class="empty-state" style="color:var(--red)">${e.message}</div></td></tr>`; toast('✗ ' + e.message, 'err'); }
+        }
+
+        async function createDevice() {
+            const msg = document.getElementById('devMsg');
+            const name = document.getElementById('d_name').value.trim(), code = document.getElementById('d_code').value.trim(), loc = document.getElementById('d_loc').value.trim(), vari = document.getElementById('d_var').value.trim() || 'standard';
+            if (!name || !code) { msg.textContent = '⚠ Cần name và code'; msg.style.color = 'var(--red)'; return; }
+            msg.textContent = 'Đang tạo...'; msg.style.color = 'var(--text3)';
+            try {
+                const res = await fetch(getBase() + '/devices/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ device_name: name, device_code: code, location: loc || null, device_variant: vari }) });
+                const data = await res.json(); if (!res.ok) throw new Error(data.detail || 'Lỗi');
+                msg.textContent = `✓ Thêm xong #${data.device_id}`; msg.style.color = 'var(--green)';
+                ['d_name', 'd_code', 'd_loc'].forEach(id => document.getElementById(id).value = '');
+                toast('✓ Thêm device thành công', 'ok'); loadDevices();
+            } catch (e) { msg.textContent = '✗ ' + e.message; msg.style.color = 'var(--red)'; toast('✗ ' + e.message, 'err'); }
+        }
+
+        async function deleteDevice(id) { if (!confirm(`Xoá device #${id}?`)) return; try { await fetch(getBase() + `/devices/${id}`, { method: 'DELETE' }); toast(`✓ Đã xoá device #${id}`, 'ok'); loadDevices(); } catch (e) { toast('✗ ' + e.message, 'err'); } }
+
+        async function loadEvents() {
+            const body = document.getElementById('eventsBody'); const limit = document.getElementById('evLimit').value || 50;
+            body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><span class="spinner"></span></div></td></tr>`;
+            try {
+                const res = await fetch(`${getBase()}/events/?limit=${limit}`); if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (!data.length) { body.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📋</div><div>Không có event</div></div></td></tr>`; return; }
+                body.innerHTML = data.map(e => `<tr><td class="mono muted">${e.event_id}</td><td class="mono">${e.device_id}</td><td><span class="tag">${e.button_state}</span></td><td class="mono muted" style="font-size:12px">${fmtDate(e.created_at)}</td></tr>`).join('');
+            } catch (e) { body.innerHTML = `<tr><td colspan="4"><div class="empty-state" style="color:var(--red)">${e.message}</div></td></tr>`; toast('✗ ' + e.message, 'err'); }
+        }
+
+        function fmtDate(iso) { if (!iso) return '—'; const d = new Date(iso); return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }); }
+
+        function toast(msg, type = 'ok') { const wrap = document.getElementById('toast'); const el = document.createElement('div'); el.className = 'toast-item ' + (type === 'ok' ? 'ok' : 'err'); el.innerHTML = `<span>${msg}</span>`; wrap.appendChild(el); setTimeout(() => el.remove(), 3100); }
+
+        // INIT
+        updateStats(); renderSparkline(); renderVerStats();
+        document.getElementById('histCount').textContent = hist.length;
+        document.getElementById('histBadge').textContent = hist.length;
+    </script>
+</body>
+
+</html>
