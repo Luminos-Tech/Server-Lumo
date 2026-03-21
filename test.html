@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUMO — API Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0d0d0f;
+            --surface: #141417;
+            --surface2: #1a1a1f;
+            --border: #252528;
+            --border2: #2e2e33;
+            --text: #e8e8ec;
+            --muted: #6b6b78;
+            --accent: #e8e8ec;
+            --ok: #4ade80;
+            --warn: #facc15;
+            --err: #f87171;
+            --blue: #93c5fd;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Syne', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 13px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 0 24px;
+            height: 52px;
+        }
+
+        .logo {
+            font-family: var(--sans);
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: var(--text);
+        }
+
+        .logo span {
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .nav-tab {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--muted);
+            padding: 6px 14px;
+            border-radius: 4px;
+            transition: color 0.15s, background 0.15s;
+            letter-spacing: 0.04em;
+        }
+
+        .nav-tab:hover {
+            color: var(--text);
+            background: var(--surface2);
+        }
+
+        .nav-tab.active {
+            color: var(--text);
+            background: var(--surface2);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--muted);
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .status-dot.ok {
+            background: var(--ok);
+            box-shadow: 0 0 6px var(--ok);
+        }
+
+        .status-dot.err {
+            background: var(--err);
+        }
+
+        .base-url-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .base-url-form label {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .base-url-form input {
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            width: 200px;
+            outline: none;
+        }
+
+        .base-url-form input:focus {
+            border-color: var(--muted);
+        }
+
+        /* MAIN */
+        .main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 24px;
+        }
+
+        /* PANELS */
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        /* SECTION HEADER */
+        .section-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: var(--sans);
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+
+        .badge {
+            font-size: 10px;
+            letter-spacing: 0.06em;
+            padding: 2px 8px;
+            border-radius: 3px;
+            border: 1px solid var(--border2);
+            color: var(--muted);
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .card-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        /* VERSION TESTER */
+        .version-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .version-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+
+        .version-card:hover {
+            border-color: var(--border2);
+        }
+
+        .version-card.selected {
+            border-color: var(--text);
+        }
+
+        .version-card .v-label {
+            font-family: var(--sans);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .version-card .v-model {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .version-card .v-feat {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 6px;
+            padding: 3px 7px;
+            background: var(--surface);
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .query-row {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .query-input {
+            flex: 1;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 13px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .query-input:focus {
+            border-color: var(--muted);
+        }
+
+        .btn {
+            background: var(--text);
+            color: var(--bg);
+            border: none;
+            cursor: pointer;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 6px;
+            letter-spacing: 0.04em;
+            transition: opacity 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            opacity: 0.85;
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn-ghost {
+            background: none;
+            color: var(--err);
+            border: 1px solid var(--border2);
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            letter-spacing: 0.03em;
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--err);
+        }
+
+        .btn-add {
+            background: none;
+            color: var(--text);
+            border: 1px solid var(--border2);
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            letter-spacing: 0.03em;
+            transition: border-color 0.15s;
+        }
+
+        .btn-add:hover {
+            border-color: var(--muted);
+        }
+
+        .btn-sm {
+            background: var(--text);
+            color: var(--bg);
+            border: none;
+            cursor: pointer;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 5px;
+        }
+
+        /* RESPONSE BOX */
+        .resp-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 12px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .timing-pill {
+            padding: 2px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border2);
+            font-size: 11px;
+        }
+
+        .timing-pill.fast {
+            color: var(--ok);
+            border-color: var(--ok);
+        }
+
+        .timing-pill.medium {
+            color: var(--warn);
+            border-color: var(--warn);
+        }
+
+        .timing-pill.slow {
+            color: var(--err);
+            border-color: var(--err);
+        }
+
+        .resp-box {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px 16px;
+            font-size: 13px;
+            line-height: 1.7;
+            min-height: 60px;
+            color: var(--text);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .resp-box.loading {
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .resp-box.error {
+            color: var(--err);
+        }
+
+        /* HISTORY TABLE */
+        .hist-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .hist-table th {
+            text-align: left;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            font-weight: 500;
+            padding: 6px 12px 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hist-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            vertical-align: top;
+        }
+
+        .hist-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .hist-table tr:hover td {
+            background: var(--surface2);
+        }
+
+        .cell-muted {
+            color: var(--muted);
+        }
+
+        .cell-ok {
+            color: var(--ok);
+        }
+
+        .cell-err {
+            color: var(--err);
+        }
+
+        .cell-warn {
+            color: var(--warn);
+        }
+
+        .cell-trunc {
+            max-width: 320px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* TABLE (data) */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            text-align: left;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            font-weight: 500;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            letter-spacing: 0.04em;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            color: var(--muted);
+        }
+
+        .tag.active {
+            border-color: #4ade8044;
+            color: var(--ok);
+            background: #4ade8010;
+        }
+
+        .tag.user {
+            border-color: #93c5fd44;
+            color: var(--blue);
+            background: #93c5fd10;
+        }
+
+        .tag.admin {
+            border-color: #facc1544;
+            color: var(--warn);
+            background: #facc1510;
+        }
+
+        /* FORM GRID */
+        .form-grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-field label {
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+        }
+
+        .form-field input {
+            background: var(--bg);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 12px;
+            padding: 7px 10px;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .form-field input:focus {
+            border-color: var(--muted);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        /* LOADING SPINNER */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border2);
+            border-top-color: var(--text);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            display: inline-block;
+        }
+
+        /* EMPTY STATE */
+        .empty {
+            text-align: center;
+            padding: 32px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* PERF BAR */
+        .perf-bar-wrap {
+            margin: 16px 0 0;
+        }
+
+        .perf-label {
+            font-size: 10px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            letter-spacing: 0.06em;
+        }
+
+        .perf-bar {
+            height: 3px;
+            background: var(--surface2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .perf-fill {
+            height: 100%;
+            border-radius: 2px;
+            background: var(--ok);
+            transition: width 0.4s ease, background 0.3s;
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 3px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 700px) {
+            .version-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                flex-wrap: wrap;
+                height: auto;
+                padding: 10px 16px;
+            }
+
+            .base-url-form {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .base-url-form input {
+                flex: 1;
+                width: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <div class="logo">LUMO <span>/ dashboard</span></div>
+        <nav class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('lumo')">⚡ LUMO</button>
+            <button class="nav-tab" onclick="switchTab('users')">👤 Users</button>
+            <button class="nav-tab" onclick="switchTab('devices')">📟 Devices</button>
+            <button class="nav-tab" onclick="switchTab('events')">📋 Events</button>
+        </nav>
+        <div class="base-url-form">
+            <div class="status-dot" id="statusDot"></div>
+            <label>BASE URL</label>
+            <input type="text" id="baseUrl" value="http://localhost:8000" placeholder="http://localhost:8000"
+                oninput="saveBaseUrl()">
+        </div>
+    </div>
+
+    <div class="main">
+
+        <!-- ===== LUMO PANEL ===== -->
+        <div class="panel active" id="panel-lumo">
+            <div class="section-head">
+                <div class="section-title">LUMO Versions</div>
+                <span class="badge">3 endpoints</span>
+            </div>
+
+            <div class="version-grid">
+                <div class="version-card selected" id="vcard-1" onclick="selectVersion(1)">
+                    <div class="v-label">Version 1</div>
+                    <div class="v-model">gemini-2.5-flash</div>
+                    <span class="v-feat">Google Search</span>
+                </div>
+                <div class="version-card" id="vcard-2" onclick="selectVersion(2)">
+                    <div class="v-label">Version 2</div>
+                    <div class="v-model">gemini-3.1-flash-lite</div>
+                    <span class="v-feat">No search</span>
+                </div>
+                <div class="version-card" id="vcard-3" onclick="selectVersion(3)">
+                    <div class="v-label">Version 3</div>
+                    <div class="v-model">Perplexity Sonar</div>
+                    <span class="v-feat">Web search</span>
+                </div>
+            </div>
+
+            <div class="query-row">
+                <input class="query-input" id="queryInput" type="text" placeholder="Nhập câu hỏi gửi đến LUMO..."
+                    onkeydown="if(event.key==='Enter') sendQuery()">
+                <button class="btn" id="sendBtn" onclick="sendQuery()">GỬI</button>
+            </div>
+
+            <div id="respMeta" class="resp-meta" style="display:none">
+                <span id="respVersion" class="cell-muted"></span>
+                <span id="respTiming" class="timing-pill"></span>
+                <span id="respStatus"></span>
+            </div>
+            <div class="resp-box" id="respBox" style="display:none"></div>
+
+            <div id="perfWrap" class="perf-bar-wrap" style="display:none">
+                <div class="perf-label">LATENCY INDICATOR</div>
+                <div class="perf-bar">
+                    <div class="perf-fill" id="perfFill" style="width:0%"></div>
+                </div>
+            </div>
+
+            <!-- History -->
+            <div class="card" style="margin-top:24px">
+                <div class="card-header">
+                    <span>LỊCH SỬ GỬI</span>
+                    <span style="margin-left:auto; cursor:pointer; color:var(--muted)"
+                        onclick="clearHistory()">xoá</span>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <table class="hist-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>VER</th>
+                                <th>QUERY</th>
+                                <th>RESPONSE</th>
+                                <th>TIME (ms)</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="histBody">
+                            <tr>
+                                <td colspan="6" class="empty">Chưa có lịch sử</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== USERS PANEL ===== -->
+        <div class="panel" id="panel-users">
+            <div class="section-head">
+                <div class="section-title">Users</div>
+                <span class="badge">GET /users/ · POST /users/ · DELETE</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">THÊM USER MỚI</div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>FULL NAME</label>
+                            <input id="u_name" type="text" placeholder="Nguyen Van A">
+                        </div>
+                        <div class="form-field">
+                            <label>EMAIL</label>
+                            <input id="u_email" type="email" placeholder="a@example.com">
+                        </div>
+                        <div class="form-field">
+                            <label>PASSWORD</label>
+                            <input id="u_pass" type="password" placeholder="••••••••">
+                        </div>
+                    </div>
+                    <div class="form-actions" style="margin-top:12px">
+                        <button class="btn-sm" onclick="createUser()">TẠO USER</button>
+                        <span id="userFormMsg" style="font-size:11px; color:var(--muted)"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>DANH SÁCH USERS</span>
+                    <button class="btn-add" style="margin-left:auto" onclick="loadUsers()">↻ refresh</button>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>FULL NAME</th>
+                                <th>EMAIL</th>
+                                <th>ROLE</th>
+                                <th>CREATED AT</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersBody">
+                            <tr>
+                                <td colspan="6" class="empty">Nhấn refresh để tải</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== DEVICES PANEL ===== -->
+        <div class="panel" id="panel-devices">
+            <div class="section-head">
+                <div class="section-title">Devices</div>
+                <span class="badge">GET /devices/ · POST /devices/ · DELETE</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">THÊM DEVICE MỚI</div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>DEVICE NAME</label>
+                            <input id="d_name" type="text" placeholder="ESP32-01">
+                        </div>
+                        <div class="form-field">
+                            <label>DEVICE CODE</label>
+                            <input id="d_code" type="text" placeholder="ESP32_LUMO_001">
+                        </div>
+                        <div class="form-field">
+                            <label>LOCATION</label>
+                            <input id="d_loc" type="text" placeholder="Phòng khách">
+                        </div>
+                        <div class="form-field">
+                            <label>VARIANT</label>
+                            <input id="d_var" type="text" placeholder="standard">
+                        </div>
+                    </div>
+                    <div class="form-actions" style="margin-top:12px">
+                        <button class="btn-sm" onclick="createDevice()">THÊM DEVICE</button>
+                        <span id="devFormMsg" style="font-size:11px; color:var(--muted)"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>DANH SÁCH DEVICES</span>
+                    <button class="btn-add" style="margin-left:auto" onclick="loadDevices()">↻ refresh</button>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>DEVICE ID</th>
+                                <th>NAME</th>
+                                <th>CODE</th>
+                                <th>STATUS</th>
+                                <th>LOCATION</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="devicesBody">
+                            <tr>
+                                <td colspan="6" class="empty">Nhấn refresh để tải</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== EVENTS PANEL ===== -->
+        <div class="panel" id="panel-events">
+            <div class="section-head">
+                <div class="section-title">Button Events</div>
+                <span class="badge">GET /events/</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>DANH SÁCH EVENTS</span>
+                    <span style="margin-left:auto; display:flex; align-items:center; gap:8px">
+                        <label style="font-size:10px; color:var(--muted)">LIMIT</label>
+                        <input id="evLimit" type="number" value="50" min="1" max="200"
+                            style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:4px;width:60px;outline:none">
+                        <button class="btn-add" onclick="loadEvents()">↻ refresh</button>
+                    </span>
+                </div>
+                <div class="card-body" style="padding:0">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>EVENT ID</th>
+                                <th>DEVICE ID</th>
+                                <th>BUTTON STATE</th>
+                                <th>CREATED AT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventsBody">
+                            <tr>
+                                <td colspan="4" class="empty">Nhấn refresh để tải</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /main -->
+
+    <script>
+        // ─── STATE ───────────────────────────────────────────────
+        let selectedVersion = 1;
+        let queryHistory = JSON.parse(localStorage.getItem('lumo_history') || '[]');
+
+        function getBase() {
+            return document.getElementById('baseUrl').value.replace(/\/$/, '');
+        }
+        function saveBaseUrl() {
+            localStorage.setItem('lumo_base', document.getElementById('baseUrl').value);
+        }
+
+        // Restore base URL
+        const savedBase = localStorage.getItem('lumo_base');
+        if (savedBase) document.getElementById('baseUrl').value = savedBase;
+
+        // ─── TABS ────────────────────────────────────────────────
+        function switchTab(name) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            event.target.classList.add('active');
+            if (name === 'users') loadUsers();
+            if (name === 'devices') loadDevices();
+            if (name === 'events') loadEvents();
+        }
+
+        // ─── VERSION SELECT ──────────────────────────────────────
+        function selectVersion(v) {
+            selectedVersion = v;
+            [1, 2, 3].forEach(i => {
+                document.getElementById('vcard-' + i).classList.toggle('selected', i === v);
+            });
+        }
+
+        // ─── PING STATUS ─────────────────────────────────────────
+        async function pingServer() {
+            const dot = document.getElementById('statusDot');
+            try {
+                const t = Date.now();
+                await fetch(getBase() + '/docs', { method: 'HEAD', signal: AbortSignal.timeout(3000) });
+                dot.className = 'status-dot ok';
+            } catch {
+                dot.className = 'status-dot err';
+            }
+        }
+        pingServer();
+        setInterval(pingServer, 15000);
+
+        // ─── LUMO QUERY ──────────────────────────────────────────
+        async function sendQuery() {
+            const text = document.getElementById('queryInput').value.trim();
+            if (!text) return;
+
+            const btn = document.getElementById('sendBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>';
+
+            const respBox = document.getElementById('respBox');
+            const respMeta = document.getElementById('respMeta');
+            const perfWrap = document.getElementById('perfWrap');
+            respBox.style.display = 'block';
+            respMeta.style.display = 'flex';
+            perfWrap.style.display = 'block';
+            respBox.className = 'resp-box loading';
+            respBox.textContent = 'Đang chờ LUMO phản hồi...';
+
+            const url = `${getBase()}/version${selectedVersion}?textLumoCallServer=${encodeURIComponent(text)}`;
+            const t0 = performance.now();
+            let elapsed = 0;
+            let ok = true;
+            let responseText = '';
+
+            try {
+                const res = await fetch(url);
+                elapsed = Math.round(performance.now() - t0);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                responseText = typeof data === 'string' ? data
+                    : (data.response || data.textRes || JSON.stringify(data, null, 2));
+                respBox.className = 'resp-box';
+                respBox.textContent = responseText;
+            } catch (e) {
+                elapsed = Math.round(performance.now() - t0);
+                ok = false;
+                responseText = '⚠ ' + e.message;
+                respBox.className = 'resp-box error';
+                respBox.textContent = responseText;
+            }
+
+            // meta
+            const timingEl = document.getElementById('respTiming');
+            timingEl.textContent = elapsed + ' ms';
+            timingEl.className = 'timing-pill ' + (elapsed < 1500 ? 'fast' : elapsed < 4000 ? 'medium' : 'slow');
+            document.getElementById('respVersion').textContent = `v${selectedVersion}`;
+            document.getElementById('respStatus').innerHTML = ok
+                ? `<span class="cell-ok">✓ OK</span>`
+                : `<span class="cell-err">✗ ERROR</span>`;
+
+            // perf bar
+            const maxMs = 10000;
+            const pct = Math.min(100, (elapsed / maxMs) * 100);
+            const fill = document.getElementById('perfFill');
+            fill.style.width = pct + '%';
+            fill.style.background = elapsed < 1500 ? 'var(--ok)' : elapsed < 4000 ? 'var(--warn)' : 'var(--err)';
+
+            // history
+            const entry = { v: selectedVersion, q: text, r: responseText, ms: elapsed, ok, ts: new Date().toLocaleTimeString() };
+            queryHistory.unshift(entry);
+            if (queryHistory.length > 50) queryHistory.pop();
+            localStorage.setItem('lumo_history', JSON.stringify(queryHistory));
+            renderHistory();
+
+            btn.disabled = false;
+            btn.textContent = 'GỬI';
+        }
+
+        function renderHistory() {
+            const body = document.getElementById('histBody');
+            if (!queryHistory.length) {
+                body.innerHTML = '<tr><td colspan="6" class="empty">Chưa có lịch sử</td></tr>';
+                return;
+            }
+            body.innerHTML = queryHistory.map((h, i) => `
+    <tr>
+      <td class="cell-muted">${queryHistory.length - i}</td>
+      <td><span class="badge">v${h.v}</span></td>
+      <td class="cell-trunc" title="${h.q}">${h.q}</td>
+      <td class="cell-trunc" style="max-width:280px" title="${h.r}">${h.r}</td>
+      <td class="${h.ms < 1500 ? 'cell-ok' : h.ms < 4000 ? 'cell-warn' : 'cell-err'}">${h.ms}</td>
+      <td class="${h.ok ? 'cell-ok' : 'cell-err'}">${h.ok ? '✓' : '✗'}</td>
+    </tr>`).join('');
+        }
+
+        function clearHistory() {
+            queryHistory = [];
+            localStorage.removeItem('lumo_history');
+            renderHistory();
+        }
+
+        renderHistory();
+
+        // ─── USERS ───────────────────────────────────────────────
+        async function loadUsers() {
+            const body = document.getElementById('usersBody');
+            body.innerHTML = '<tr><td colspan="6" style="padding:16px;color:var(--muted);text-align:center"><span class="spinner"></span></td></tr>';
+            try {
+                const t0 = performance.now();
+                const res = await fetch(getBase() + '/users/');
+                const ms = Math.round(performance.now() - t0);
+                const data = await res.json();
+                if (!data.length) {
+                    body.innerHTML = '<tr><td colspan="6" class="empty">Không có user nào</td></tr>';
+                    return;
+                }
+                body.innerHTML = data.map(u => `
+      <tr>
+        <td class="cell-muted">${u.id}</td>
+        <td>${u.full_name}</td>
+        <td>${u.email}</td>
+        <td><span class="tag ${u.role}">${u.role}</span></td>
+        <td class="cell-muted">${fmtDate(u.created_at)}</td>
+        <td><button class="btn-ghost" onclick="deleteUser(${u.id})">xoá</button></td>
+      </tr>`).join('');
+            } catch (e) {
+                body.innerHTML = `<tr><td colspan="6" class="empty" style="color:var(--err)">${e.message}</td></tr>`;
+            }
+        }
+
+        async function createUser() {
+            const msg = document.getElementById('userFormMsg');
+            const name = document.getElementById('u_name').value.trim();
+            const email = document.getElementById('u_email').value.trim();
+            const pass = document.getElementById('u_pass').value.trim();
+            if (!name || !email || !pass) { msg.textContent = '⚠ Điền đủ thông tin'; msg.style.color = 'var(--err)'; return; }
+            msg.textContent = 'Đang tạo...'; msg.style.color = 'var(--muted)';
+            try {
+                const res = await fetch(getBase() + '/users/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ full_name: name, email, password: pass })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Lỗi');
+                msg.textContent = `✓ Đã tạo user #${data.id}`; msg.style.color = 'var(--ok)';
+                document.getElementById('u_name').value = '';
+                document.getElementById('u_email').value = '';
+                document.getElementById('u_pass').value = '';
+                loadUsers();
+            } catch (e) {
+                msg.textContent = '✗ ' + e.message; msg.style.color = 'var(--err)';
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm(`Xoá user #${id}?`)) return;
+            try {
+                await fetch(getBase() + `/users/${id}`, { method: 'DELETE' });
+                loadUsers();
+            } catch (e) { alert(e.message); }
+        }
+
+        // ─── DEVICES ─────────────────────────────────────────────
+        async function loadDevices() {
+            const body = document.getElementById('devicesBody');
+            body.innerHTML = '<tr><td colspan="6" style="padding:16px;color:var(--muted);text-align:center"><span class="spinner"></span></td></tr>';
+            try {
+                const res = await fetch(getBase() + '/devices/');
+                const data = await res.json();
+                if (!data.length) {
+                    body.innerHTML = '<tr><td colspan="6" class="empty">Không có device nào</td></tr>';
+                    return;
+                }
+                body.innerHTML = data.map(d => `
+      <tr>
+        <td class="cell-muted">${d.device_id}</td>
+        <td>${d.device_name}</td>
+        <td><span style="font-size:11px;letter-spacing:0.04em">${d.device_code}</span></td>
+        <td><span class="tag ${d.status === 'active' ? 'active' : ''}">${d.status}</span></td>
+        <td class="cell-muted">${d.location || '—'}</td>
+        <td><button class="btn-ghost" onclick="deleteDevice(${d.device_id})">xoá</button></td>
+      </tr>`).join('');
+            } catch (e) {
+                body.innerHTML = `<tr><td colspan="6" class="empty" style="color:var(--err)">${e.message}</td></tr>`;
+            }
+        }
+
+        async function createDevice() {
+            const msg = document.getElementById('devFormMsg');
+            const name = document.getElementById('d_name').value.trim();
+            const code = document.getElementById('d_code').value.trim();
+            const loc = document.getElementById('d_loc').value.trim();
+            const vari = document.getElementById('d_var').value.trim() || 'standard';
+            if (!name || !code) { msg.textContent = '⚠ Cần name và code'; msg.style.color = 'var(--err)'; return; }
+            msg.textContent = 'Đang tạo...'; msg.style.color = 'var(--muted)';
+            try {
+                const res = await fetch(getBase() + '/devices/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device_name: name, device_code: code, location: loc || null, device_variant: vari })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Lỗi');
+                msg.textContent = `✓ Đã thêm device #${data.device_id}`; msg.style.color = 'var(--ok)';
+                ['d_name', 'd_code', 'd_loc', 'd_var'].forEach(id => document.getElementById(id).value = '');
+                loadDevices();
+            } catch (e) {
+                msg.textContent = '✗ ' + e.message; msg.style.color = 'var(--err)';
+            }
+        }
+
+        async function deleteDevice(id) {
+            if (!confirm(`Xoá device #${id}?`)) return;
+            try {
+                await fetch(getBase() + `/devices/${id}`, { method: 'DELETE' });
+                loadDevices();
+            } catch (e) { alert(e.message); }
+        }
+
+        // ─── EVENTS ──────────────────────────────────────────────
+        async function loadEvents() {
+            const body = document.getElementById('eventsBody');
+            const limit = document.getElementById('evLimit').value || 50;
+            body.innerHTML = '<tr><td colspan="4" style="padding:16px;color:var(--muted);text-align:center"><span class="spinner"></span></td></tr>';
+            try {
+                const t0 = performance.now();
+                const res = await fetch(`${getBase()}/events/?limit=${limit}`);
+                const ms = Math.round(performance.now() - t0);
+                const data = await res.json();
+                if (!data.length) {
+                    body.innerHTML = '<tr><td colspan="4" class="empty">Không có event nào</td></tr>';
+                    return;
+                }
+                body.innerHTML = data.map(e => `
+      <tr>
+        <td class="cell-muted">${e.event_id}</td>
+        <td>${e.device_id}</td>
+        <td><span class="tag">${e.button_state}</span></td>
+        <td class="cell-muted">${fmtDate(e.created_at)}</td>
+      </tr>`).join('');
+            } catch (e) {
+                body.innerHTML = `<tr><td colspan="4" class="empty" style="color:var(--err)">${e.message}</td></tr>`;
+            }
+        }
+
+        // ─── UTILS ───────────────────────────────────────────────
+        function fmtDate(iso) {
+            if (!iso) return '—';
+            const d = new Date(iso);
+            return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        }
+    </script>
+</body>
+
+</html>

@@ -371,3 +371,14 @@ def log_button_event(event: schemas.EventCreate, db: Session = Depends(get_db)):
 @app.get("/events/", response_model=List[schemas.EventResponse], tags=["Events"])
 def read_events(limit: int = 50, db: Session = Depends(get_db)):
     return crud.get_events(db, limit=limit)
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Mount folder static (để chứa file HTML, CSS, JS nếu có)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Route /dashboard trả về file HTML
+@app.get("/dashboard", include_in_schema=False)
+async def dashboard():
+    return FileResponse("static/dashboard.html")
