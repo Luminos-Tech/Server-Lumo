@@ -192,7 +192,7 @@ async def version2(
     day = current_time.day
     month = current_time.month
     year = current_time.year
-
+    search_result = search_web_text(textLumoCallServer)
     dateNow = "thời gian ngày " + str(day) + " tháng " + str(month) + " năm " + str(year)
     prompt = f"""[SYSTEM INSTRUCTIONS]
 Bạn là LUMO, một trợ lý ảo AI thân thiện, ấm áp và luôn sẵn sàng giúp đỡ mọi người, được tạo ra bởi công ty Luminos Tech.
@@ -217,6 +217,7 @@ Bạn là LUMO, một trợ lý ảo AI thân thiện, ấm áp và luôn sẵn 
     - Trả lời tự nhiên, ấm áp và chân thành nhất có thể.
 
 [CONTEXT]
+- {search_result}
 Thời gian hiện tại: {hour}:{minute}:{second} {dateNow}
 
 [CHAT HISTORY]
