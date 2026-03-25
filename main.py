@@ -2,8 +2,9 @@ from ast import List
 from logging.handlers import TimedRotatingFileHandler
 import os
 from pathlib import Path
+from aiofiles import tempfile
 import requests
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, File, Query, HTTPException, UploadFile
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -77,6 +78,9 @@ def get_lumo_history_string(file_path, limit=20):
 app = FastAPI()
 
 TAVILY_API_KEY = "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"
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "server running"}
 
 def search_web_text(query: str) -> str:
     url = "https://api.tavily.com/search"
@@ -192,7 +196,7 @@ async def version2(
     day = current_time.day
     month = current_time.month
     year = current_time.year
-
+    search_result = search_web_text(textLumoCallServer)
     dateNow = "thời gian ngày " + str(day) + " tháng " + str(month) + " năm " + str(year)
     prompt = f"""[SYSTEM INSTRUCTIONS]
 Bạn là LUMO, một trợ lý ảo AI thân thiện, ấm áp và luôn sẵn sàng giúp đỡ mọi người, được tạo ra bởi công ty Luminos Tech.
@@ -217,6 +221,7 @@ Bạn là LUMO, một trợ lý ảo AI thân thiện, ấm áp và luôn sẵn 
     - Trả lời tự nhiên, ấm áp và chân thành nhất có thể.
 
 [CONTEXT]
+- {search_result}
 Thời gian hiện tại: {hour}:{minute}:{second} {dateNow}
 
 [CHAT HISTORY]
@@ -381,3 +386,94 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/dashboard", include_in_schema=False)
 async def dashboard():
     return FileResponse("static/dashboard.html")
+
+from groq import BaseModel, Groq
+from fastapi.middleware.cors import CORSMiddleware
+client_groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+ 
+# =============================================
+# MODELS
+# =============================================
+class EventPayload(BaseModel):
+    device_code: str
+    button_state: str
+    event_type: str
+    event_value: str
+    user_id: int
+ 
+class TextResponse(BaseModel):
+    textRes: str
+    status: str = "ok"
+ 
+# =============================================
+# ROUTES
+# =============================================
+ 
+@app.get("/")
+def root():
+    return {"message": "LumoHub API is running"}
+ 
+ 
+@app.post("/events/", response_model=TextResponse)
+def receive_event(payload: EventPayload):
+    """Nhận event từ ESP32 (button press, v.v.)"""
+    print(f"[EVENT] device={payload.device_code} state={payload.button_state} "
+          f"type={payload.event_type} value={payload.event_value} user={payload.user_id}")
+ 
+    if payload.button_state == "LUMO Start":
+        return TextResponse(textRes="Lumo đã khởi động!")
+    elif payload.button_state == "turn button":
+        return TextResponse(textRes="Button được nhấn")
+    else:
+        return TextResponse(textRes=f"Nhận event: {payload.button_state}")
+ 
+ 
+@app.post("/audio/", response_model=TextResponse)
+async def upload_audio(audio: UploadFile = File(...)):
+    """Nhận file WAV từ ESP32 → Groq Whisper STT → trả về text"""
+    
+    suffix = os.path.splitext(audio.filename)[-1] or ".wav"
+    
+    # ✅ Đọc content trước
+    content = await audio.read()
+    
+    # ✅ Dùng hoàn toàn sync, không dùng aiofiles
+    tmp_path = f"/tmp/esp32_audio_{os.getpid()}{suffix}"
+    
+    try:
+        # Ghi file sync
+        with open(tmp_path, "wb") as f:
+            f.write(content)
+
+        print(f"[AUDIO] File: {audio.filename}, size: {len(content)} bytes")
+
+        # Gọi Groq Whisper
+        with open(tmp_path, "rb") as f:
+            transcription = client_groq.audio.transcriptions.create(
+                file=(audio.filename, f.read()),
+                model="whisper-large-v3-turbo",
+                temperature=0,
+                response_format="verbose_json",
+            )
+
+        text = transcription.text.strip()
+        print(f"[STT] Result: {text}")
+        v2Answer = await version2(textLumoCallServer=text)
+        if isinstance(v2Answer, dict):
+            v2Answer = v2Answer["response"]
+        print(f"V2 Anser: {v2Answer}")
+        return TextResponse(textRes=text)
+
+    except Exception as e:
+        print(f"[ERROR] STT failed: {e}")
+        raise HTTPException(status_code=500, detail=f"STT error: {str(e)}")
+
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)

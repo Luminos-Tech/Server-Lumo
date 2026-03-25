@@ -1,11 +1,10 @@
 fastapi
 uvicorn
-sqlmodel
 python-dotenv
-google-generativeai
+requests
 google-genai
 sqlalchemy
-psycopg2-binary
-pydantic
-email-validator
 aiofiles
+python-multipart
+groq
+pydantic
