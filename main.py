@@ -414,66 +414,120 @@ class TextResponse(BaseModel):
 # =============================================
 # ROUTES
 # =============================================
- 
-@app.get("/")
-def root():
-    return {"message": "LumoHub API is running"}
- 
- 
-@app.post("/events/", response_model=TextResponse)
-def receive_event(payload: EventPayload):
-    """Nhận event từ ESP32 (button press, v.v.)"""
-    print(f"[EVENT] device={payload.device_code} state={payload.button_state} "
-          f"type={payload.event_type} value={payload.event_value} user={payload.user_id}")
- 
-    if payload.button_state == "LUMO Start":
-        return TextResponse(textRes="Lumo đã khởi động!")
-    elif payload.button_state == "turn button":
-        return TextResponse(textRes="Button được nhấn")
-    else:
-        return TextResponse(textRes=f"Nhận event: {payload.button_state}")
- 
- 
-@app.post("/audio/", response_model=TextResponse)
+"""
+Server endpoint /audio/
+Pipeline: ESP32 WAV  →  Groq Whisper STT  →  version2 TTT  →  Gemini TTS  →  WAV response
+"""
+
+import os
+import wave
+from fastapi import UploadFile, File, HTTPException
+from fastapi.responses import FileResponse
+from google import genai
+from google.genai import types
+
+# ── Khởi tạo Gemini client (đặt ở module level, khởi tạo 1 lần) ──────────────
+client_gemini = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
+
+TTS_MODEL   = "gemini-2.5-flash-preview-tts"
+TTS_VOICE   = "Kore"          # đổi thành "Puck", "Charon", v.v. nếu muốn
+TTS_RATE    = 24000           # sample rate Gemini trả về
+TTS_CHANNELS = 1
+TTS_SAMPWIDTH = 2             # 16-bit PCM
+
+
+def _pcm_to_wav(pcm_data: bytes, path: str) -> None:
+    """Ghi raw PCM bytes thành file WAV chuẩn."""
+    with wave.open(path, "wb") as wf:
+        wf.setnchannels(TTS_CHANNELS)
+        wf.setsampwidth(TTS_SAMPWIDTH)
+        wf.setframerate(TTS_RATE)
+        wf.writeframes(pcm_data)
+
+
+@app.post("/audio/")
 async def upload_audio(audio: UploadFile = File(...)):
-    """Nhận file WAV từ ESP32 → Groq Whisper STT → trả về text"""
-    
-    suffix = os.path.splitext(audio.filename)[-1] or ".wav"
-    
-    # ✅ Đọc content trước
+    """
+    Nhận file WAV từ ESP32-S3.
+    1. STT  – Groq Whisper large-v3-turbo   → text người dùng nói
+    2. TTT  – version2                       → câu trả lời của LUMO
+    3. TTS  – Gemini 2.5 Flash Preview TTS  → file WAV giọng nói phản hồi
+    Trả về file WAV để ESP32 phát trực tiếp.
+    """
+    suffix   = os.path.splitext(audio.filename)[-1] or ".wav"
+    pid      = os.getpid()
+    tmp_in   = f"/tmp/esp32_in_{pid}{suffix}"
+    tmp_out  = f"/tmp/esp32_out_{pid}.wav"
+
     content = await audio.read()
-    
-    # ✅ Dùng hoàn toàn sync, không dùng aiofiles
-    tmp_path = f"/tmp/esp32_audio_{os.getpid()}{suffix}"
-    
+
     try:
-        # Ghi file sync
-        with open(tmp_path, "wb") as f:
+        # ── Lưu file nhận được ────────────────────────────────────
+        with open(tmp_in, "wb") as f:
             f.write(content)
+        print(f"[AUDIO] received: {audio.filename}  size: {len(content)} bytes")
 
-        print(f"[AUDIO] File: {audio.filename}, size: {len(content)} bytes")
-
-        # Gọi Groq Whisper
-        with open(tmp_path, "rb") as f:
+        # ── 1. STT: Groq Whisper ──────────────────────────────────
+        with open(tmp_in, "rb") as f:
             transcription = client_groq.audio.transcriptions.create(
                 file=(audio.filename, f.read()),
                 model="whisper-large-v3-turbo",
                 temperature=0,
                 response_format="verbose_json",
             )
+        stt_text = transcription.text.strip()
+        print(f"[STT] → {stt_text!r}")
 
-        text = transcription.text.strip()
-        print(f"[STT] Result: {text}")
-        v2Answer = await version2(textLumoCallServer=text)
-        if isinstance(v2Answer, dict):
-            v2Answer = v2Answer["response"]
-        print(f"V2 Anser: {v2Answer}")
-        return TextResponse(textRes=text)
+        if not stt_text:
+            raise HTTPException(status_code=422, detail="STT returned empty text")
 
+        # ── 2. TTT: version2 ─────────────────────────────────────
+        v2_answer = await version2(textLumoCallServer=stt_text)
+        if isinstance(v2_answer, dict):
+            v2_answer = v2_answer.get("response", "")
+        v2_answer = str(v2_answer).strip()
+        print(f"[TTT] → {v2_answer!r}")
+
+        if not v2_answer:
+            raise HTTPException(status_code=500, detail="version2 returned empty response")
+
+        # ── 3. TTS: Gemini 2.5 Flash Preview ─────────────────────
+        tts_response = client_gemini.models.generate_content(
+            model=TTS_MODEL,
+            contents=v2_answer,
+            config=types.GenerateContentConfig(
+                response_modalities=["AUDIO"],
+                speech_config=types.SpeechConfig(
+                    voice_config=types.VoiceConfig(
+                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                            voice_name=TTS_VOICE,
+                        )
+                    )
+                ),
+            ),
+        )
+
+        pcm_data = tts_response.candidates[0].content.parts[0].inline_data.data
+        print(f"[TTS] PCM bytes: {len(pcm_data)}")
+
+        # ── Đóng gói thành WAV và trả về ESP32 ───────────────────
+        _pcm_to_wav(pcm_data, tmp_out)
+        print(f"[TTS] WAV saved: {tmp_out}")
+
+        # FileResponse tự xử lý streaming; dọn file sau khi gửi xong
+        return FileResponse(
+            tmp_out,
+            media_type="audio/wav",
+            filename="response.wav",
+            background=None,   # FastAPI sẽ giữ file cho đến khi response kết thúc
+        )
+
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"[ERROR] STT failed: {e}")
-        raise HTTPException(status_code=500, detail=f"STT error: {str(e)}")
-
+        print(f"[ERROR] Pipeline failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Pipeline error: {str(e)}")
     finally:
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
+        # Dọn file input; file output sẽ tự xoá sau khi FileResponse gửi xong
+        if os.path.exists(tmp_in):
+            os.unlink(tmp_in)
